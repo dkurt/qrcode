@@ -1,0 +1,22 @@
+language: cpp
+
+notifications:
+  email: false
+
+sudo: false
+
+compiler: gcc
+
+os: linux
+
+branches:
+  only:
+    - master
+
+git:
+  submodules: true
+
+script:
+  - mkdir build && cd build
+  - cmake .. -DCMAKE_BUILD_TYPE=Release && make -j8
+  - ./bin/qrcode --test
