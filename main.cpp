@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     ///////////////////////////////////////////////////    ^ ^
     cv::CommandLineParser parser(argc, argv, keys);
     parser.about("QR codes detector");
-    if (argc == 1 || parser.has("help"))
+    if (parser.has("help"))
     {
         parser.printMessage();
         return 0;
@@ -167,17 +167,18 @@ int main(int argc, char** argv)
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
                  std::vector<int>& xs)
 {
-    CV_Error(cv::Error::StsNotImplemented, "countPixels method");
+    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels counting");
 }
 
 bool checkRatios(const int* counts)
 {
-    CV_Error(cv::Error::StsNotImplemented, "checkRatios method");
+    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
+    return false;
 }
 
 void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers)
 {
-    CV_Error(cv::Error::StsNotImplemented, "computeCenters method");
+    CV_Error(cv::Error::StsNotImplemented, "Markers centers estimation");
 }
 
 void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
