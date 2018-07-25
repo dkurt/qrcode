@@ -21,6 +21,28 @@
         CV_Error(cv::Error::StsAssert, ss.str()); \
     }
 
+void test_bgr2gray()
+{
+    cv::Mat src = (cv::Mat_<cv::Vec3b>(2, 3) <<
+                   cv::Vec3b(91, 2, 79), cv::Vec3b(179, 52, 205), cv::Vec3b(236, 8, 181),
+                   cv::Vec3b(239, 26, 248), cv::Vec3b(207, 218, 45), cv::Vec3b(183, 158, 101));
+    cv::Mat ref = (cv::Mat_<uint8_t>(2, 3) << 35, 112, 86, 117, 165, 144);
+    cv::Mat dst;
+    bgr2gray(src, dst);
+    CHECK_EQ(cv::countNonZero(ref != dst), 0);
+}
+
+void test_gray2bin()
+{
+    cv::Mat src(14, 15, CV_8U);
+    randu(src, 0, 255);
+    cv::Mat dst(src.size(), src.type());
+
+    uint8_t thresh = 127;
+    gray2bin(src, dst);
+    CHECK_EQ(cv::countNonZero((dst > thresh) != dst), 0);
+}
+
 void test_countPixels()
 {
     uint8_t data[] = {255, 255, 0, 255, 0, 0, 255, 255, 255, 0, 0};
@@ -232,9 +254,28 @@ void test_sortMarkers_7()
     CHECK_EQ(bottomLeft, cv::Point(434, 338));
 }
 
+void test_decode()
+{
+#ifdef WIN32
+    cv::Mat img = cv::imread("..\\qrcode.png");
+#else
+    cv::Mat img = cv::imread("../qrcode.png");
+#endif
+    cv::Mat gray, bin, mask;
+
+    cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+    cv::threshold(gray, bin, 127, 255, cv::THRESH_BINARY);
+    std::string msg = decode(bin, img, mask);
+
+    CHECK_EQ(msg, "OpenCV");
+}
+
+
 bool runTests()
 {
     bool passed = true;
+    RUN_TEST(test_bgr2gray);
+    RUN_TEST(test_gray2bin);
     RUN_TEST(test_countPixels);
     RUN_TEST(test_checkRatios);
     RUN_TEST(test_computeCenters_simple_1);
@@ -247,5 +288,6 @@ bool runTests()
     RUN_TEST(test_sortMarkers_5);
     RUN_TEST(test_sortMarkers_6);
     RUN_TEST(test_sortMarkers_7);
+    RUN_TEST(test_decode);
     return passed;
 }
