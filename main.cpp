@@ -34,6 +34,7 @@ int main(int argc, char** argv)
         return runTests() ? 0 : 1;
     }
 
+    //NEW LINE
     //
     // Open an input file or a camera stream.
     //
