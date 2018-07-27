@@ -92,7 +92,8 @@ void bgr2gray(const cv::Mat& src, cv::Mat& dst)
 
 void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Grayscale to black-and-white conversion. See cv::threshold");
+    //CV_Error(cv::Error::StsNotImplemented, "Grayscale to black-and-white conversion. See cv::threshold");
+    cv::threshold(src, dst, thresh, cv::THRESH_BINARY);
 }
 
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
