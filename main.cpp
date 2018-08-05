@@ -85,35 +85,121 @@ int main(int argc, char** argv)
 
 void bgr2gray(const cv::Mat& src, cv::Mat& dst)
 {
-    CV_Error(cv::Error::StsNotImplemented, "BGR to grayscale conversion. See cv::cvtColor");
+    //CV_Error(cv::Error::StsNotImplemented, "BGR to grayscale conversion. See cv::cvtColor");
+    cv::cvtColor (src, dst, cv::COLOR_BGR2GRAY);
 }
 
 void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Grayscale to black-and-white conversion. See cv::threshold");
+    //CV_Error(cv::Error::StsNotImplemented, "Grayscale to black-and-white conversion. See cv::threshold");
+    cv::threshold (src, dst, thresh, 255, cv::THRESH_BINARY);
 }
 
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
                  std::vector<int>& xs)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels counting");
+    //CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels counting");
+    int first_black_idx = -1;
+    for (int i = 0; i < length; i++) {
+        if (row[i] == 0) {
+            first_black_idx = i;
+            break;
+        }
+    }
+    if (first_black_idx == -1)
+        return;
+    counts.emplace_back (1);
+    xs.emplace_back (first_black_idx);
+    for (int i = first_black_idx + 1; i < length; i++) {
+        if (row[i - 1] == row[i])
+            counts.back ()++;
+        else {
+            counts.emplace_back (1);
+            xs.emplace_back (i);
+        }
+    }
 }
 
 bool checkRatios(const int* counts)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
-    return false;
+    //CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
+    auto mn = std::min ({ counts[0], counts[1], counts[3], counts[4] });
+    auto mx = std::max ({ counts[0], counts[1], counts[3], counts[4] });
+    if ((double) mx / (double) mn > 1.5)
+        return false;
+    auto avg = (counts[0] + counts[1] + counts[3] + counts[4]) * 0.25;
+    auto pred = 3.0 * avg;
+    auto real = (double) counts[2];
+    if (std::max (pred, real) / std::min (pred, real) > 1.5)
+        return false;
+    return true;
+    //if (counts[0] != counts[1] ||
+    //    counts[1] != counts[3] ||
+    //    counts[3] != counts[4])
+    //    return false;
+    //if (counts[2] != 3 * counts[0])
+    //    return false;
+    //return true;
 }
 
 void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Markers centers estimation");
+    //CV_Error(cv::Error::StsNotImplemented, "Markers centers estimation");
+    std::vector<bool> used (rects.size ());
+    std::vector<cv::Rect> groups;
+    for (size_t i = 0; i < rects.size (); i++) {
+        if (used[i])
+            continue;
+        groups.emplace_back (rects[i]);
+        for (size_t j = i + 1; j < rects.size (); j++) {
+            if (used[j])
+                continue;
+            if ((groups.back () & rects[j]).area ()) {
+                groups.back () &= rects[j];
+                used[j] = true;
+            }
+        }
+    }
+    centers.reserve (groups.size ());
+    for (const auto &g : groups) {
+        auto x = g.x + g.width / 2;
+        auto y = g.y + g.height / 2;
+        centers.emplace_back (x, y);
+    }
 }
 
 void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
                  cv::Point& topRight, cv::Point& bottomLeft)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Markers positioning");
+    //CV_Error(cv::Error::StsNotImplemented, "Markers positioning");
+    // Find top left point
+    auto pts = centers;
+    {
+        auto p01 = pts[1] - pts[0];
+        auto p12 = pts[2] - pts[1];
+        auto p20 = pts[0] - pts[2];        
+        int tlId = 0;
+        auto maxlen = p12.dot (p12);
+        if (p01.dot (p01) > maxlen) {
+            maxlen = p01.dot (p01);
+            tlId = 2;
+        }
+        if (p20.dot (p20) > maxlen)
+            tlId = 1;
+        topLeft = pts[tlId];
+        std::swap (pts[tlId], pts.back ());
+        pts.pop_back ();
+    }
+    auto p0 = pts[0] - topLeft;
+    auto p1 = pts[1] - topLeft;
+    auto det = p0.x * p1.y - p1.x * p0.y;
+    if (det < 0) {
+        bottomLeft = pts[0];
+        topRight = pts[1];
+    } else {
+        bottomLeft = pts[1];
+        topRight = pts[0];
+    }
 }
 
 std::string decode(const cv::Mat& bin, cv::Mat& img, cv::Mat& mask)
