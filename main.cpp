@@ -108,14 +108,14 @@ void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
     }
     if (first_black_idx == -1)
         return;
-    counts.emplace_back (1);
-    xs.emplace_back (first_black_idx);
+    counts.push_back (1);
+    xs.push_back (first_black_idx);
     for (int i = first_black_idx + 1; i < length; i++) {
         if (row[i - 1] == row[i])
             counts.back ()++;
         else {
-            counts.emplace_back (1);
-            xs.emplace_back (i);
+            counts.push_back (1);
+            xs.push_back (i);
         }
     }
 }
@@ -123,13 +123,13 @@ void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
 bool checkRatios(const int* counts)
 {
     //CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
-    auto mn = std::min ({ counts[0], counts[1], counts[3], counts[4] });
-    auto mx = std::max ({ counts[0], counts[1], counts[3], counts[4] });
+    int mn = std::min (std::min (counts[0], counts[1]), std::min (counts[3], counts[4]));
+    int mx = std::max (std::max (counts[0], counts[1]), std::max (counts[3], counts[4]));
     if ((double) mx / (double) mn > 1.5)
         return false;
-    auto avg = (counts[0] + counts[1] + counts[3] + counts[4]) * 0.25;
-    auto pred = 3.0 * avg;
-    auto real = (double) counts[2];
+    double avg = (counts[0] + counts[1] + counts[3] + counts[4]) * 0.25;
+    double pred = 3.0 * avg;
+    double real = (double) counts[2];
     if (std::max (pred, real) / std::min (pred, real) > 1.5)
         return false;
     return true;
@@ -150,7 +150,7 @@ void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& 
     for (size_t i = 0; i < rects.size (); i++) {
         if (used[i])
             continue;
-        groups.emplace_back (rects[i]);
+        groups.push_back (rects[i]);
         for (size_t j = i + 1; j < rects.size (); j++) {
             if (used[j])
                 continue;
@@ -161,10 +161,10 @@ void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& 
         }
     }
     centers.reserve (groups.size ());
-    for (const auto &g : groups) {
-        auto x = g.x + g.width / 2;
-        auto y = g.y + g.height / 2;
-        centers.emplace_back (x, y);
+    for (size_t i = 0; i < groups.size (); i++) {
+        auto x = groups[i].x + groups[i].width / 2;
+        auto y = groups[i].y + groups[i].height / 2;
+        centers.push_back (cv::Point (x, y));
     }
 }
 
@@ -173,13 +173,13 @@ void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
 {
     //CV_Error(cv::Error::StsNotImplemented, "Markers positioning");
     // Find top left point
-    auto pts = centers;
+    std::vector<cv::Point> pts = centers;
     {
-        auto p01 = pts[1] - pts[0];
-        auto p12 = pts[2] - pts[1];
-        auto p20 = pts[0] - pts[2];        
+        cv::Point p01 = pts[1] - pts[0];
+        cv::Point p12 = pts[2] - pts[1];
+        cv::Point p20 = pts[0] - pts[2];        
         int tlId = 0;
-        auto maxlen = p12.dot (p12);
+        int maxlen = p12.dot (p12);
         if (p01.dot (p01) > maxlen) {
             maxlen = p01.dot (p01);
             tlId = 2;
@@ -190,9 +190,9 @@ void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
         std::swap (pts[tlId], pts.back ());
         pts.pop_back ();
     }
-    auto p0 = pts[0] - topLeft;
-    auto p1 = pts[1] - topLeft;
-    auto det = p0.x * p1.y - p1.x * p0.y;
+    cv::Point p0 = pts[0] - topLeft;
+    cv::Point p1 = pts[1] - topLeft;
+    int det = p0.x * p1.y - p1.x * p0.y;
     if (det < 0) {
         bottomLeft = pts[0];
         topRight = pts[1];
