@@ -162,8 +162,8 @@ void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& 
     }
     centers.reserve (groups.size ());
     for (size_t i = 0; i < groups.size (); i++) {
-        auto x = groups[i].x + groups[i].width / 2;
-        auto y = groups[i].y + groups[i].height / 2;
+        int x = groups[i].x + groups[i].width / 2;
+        int y = groups[i].y + groups[i].height / 2;
         centers.push_back (cv::Point (x, y));
     }
 }
