@@ -18,7 +18,7 @@ void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh = 127);
 // Compute number of sequent black or white pixels.
 // @param[in]  row    Pointer to a row of pixels.
 // @param[in]  length Number of elements.
-// @param[out] counts Number of sequent pixels starts from the first white one.
+// @param[out] counts Number of sequent pixels starts from the first black one.
 // @param[out] xs     Indices of the initial pixel in each group.
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
                  std::vector<int>& xs);
