@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
 void bgr2gray(const cv::Mat& src, cv::Mat& dst)
 {
-    CV_Error(cv::Error::StsNotImplemented, "BGR to grayscale conversion. See cv::cvtColor");
+    cv::cvtColor (src, dst, cv::COLOR_BGR2GRAY);
 }
 
 void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
