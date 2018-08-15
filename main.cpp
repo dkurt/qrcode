@@ -125,13 +125,34 @@ bool checkRatios(const int* counts)
     double real = counts[2];
     if (std::max (pred, real) / std::min (pred, real) > 1.5)
         return false;
-        
+
     return true;
 }
 
 void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Markers centers estimation");
+    std::vector<bool> is_used(rects.size());
+    std::vector<cv::Rect> groups;
+    for (int i = 0; i < rects.size(); i++) {
+        if (is_used[i])
+            continue;
+        groups.push_back(rects[i]);
+        for (int j = i + 1; j < rects.size(); j++) {
+            if (is_used[j])
+                continue;
+            if ((groups.back() & rects[j]).area()) {
+                groups.back() &= rects[j];
+                is_used[j] = true;
+            }
+        }
+    }
+    centers.reserve(groups.size());
+    for (const cv::Rect &g: groups) {
+        cv::Point p; 
+        p.x = g.x + g.width / 2;
+        p.y = g.y + g.height / 2;
+        centers.push_back(p);
+    }
 }
 
 void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
