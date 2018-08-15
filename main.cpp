@@ -96,12 +96,13 @@ void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
 					  std::vector<int>& xs)
 {
-	 int current_ind = 0;
+	 int current_ind = 1;
 	 while (current_ind < length) {
-		  if (row[current_ind] == 0) {
+		  if (row[current_ind] != row[current_ind - 1]) {
 				xs.push_back(current_ind);
-				int current_count = 0;
-				while(row[current_ind] == 0 && current_ind < length) {
+				int current_count = 1;
+			  	++current_ind;
+				while(row[current_ind] == row[current_ind - 1] && current_ind < length) {
 					 ++current_ind;
 					 ++current_count;
 				}
