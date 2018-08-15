@@ -96,7 +96,21 @@ void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
                  std::vector<int>& xs)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels counting");
+    int current_ind = 0;
+    while (current_ind < length) {
+        if (row[current_ind] == 0) {
+            xs.push_back(current_ind);
+            int current_count = 0;
+            while(row[current_ind] == 0 && current_ind < length) {
+                ++current_ind;
+                ++current_count;
+            }
+            counts.push_back(current_count);
+        }
+        else {
+            ++current_ind;
+        }
+    }
 }
 
 bool checkRatios(const int* counts)
