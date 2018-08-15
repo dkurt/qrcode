@@ -115,8 +115,18 @@ void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
 
 bool checkRatios(const int* counts)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
-    return false;
+    double min = std::min ({ counts[0], counts[1], counts[3], counts[4] });
+    double max = std::max ({ counts[0], counts[1], counts[3], counts[4] });
+    if (max / min > 1.5)
+        return false;
+    
+    double avg = (counts[0] + counts[1] + counts[3] + counts[4]) * 0.25;
+    double pred = 3.0 * avg;
+    double real = counts[2];
+    if (std::max (pred, real) / std::min (pred, real) > 1.5)
+        return false;
+        
+    return true;
 }
 
 void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers)
