@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 project(qrcode)
+
+
+set(CMAKE_CXX_STANDARD 14)
 
 # OpenCV's flags
 set(BUILD_LIST "core,videoio,highgui,calib3d" CACHE STRING "")

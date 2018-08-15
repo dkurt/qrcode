@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <algorithm>
 #include "qrcode.hpp"
 
 #include <opencv2/opencv.hpp>
