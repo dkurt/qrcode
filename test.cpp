@@ -43,7 +43,7 @@ void test_gray2bin()
     CHECK_EQ(cv::countNonZero((dst > thresh) != dst), 0);
 }
 
-void test_countPixels()
+void test_countPixels_1()
 {
     uint8_t data[] = {255, 255, 0, 255, 0, 0, 255, 255, 255, 0, 0};
 
@@ -61,6 +61,26 @@ void test_countPixels()
         CHECK_EQ(xs[i], targetXs[i]);
     }
 }
+
+void test_countPixels_2()
+{
+    uint8_t data[] = {0, 0, 255, 255, 0, 255, 0, 0, 255, 255, 255, 0, 0};
+
+    std::vector<int> counts, xs;
+    countPixels(&data[0], sizeof(data), counts, xs);
+
+    int targetCounts[] = {2, 2, 1, 1, 2, 3, 2};
+    int targetXs[] = {0, 2, 4, 5, 6, 8, 11};
+
+    CHECK_EQ(counts.size(), 7);
+    CHECK_EQ(xs.size(), 7);
+    for (int i = 0; i < 7; ++i)
+    {
+        CHECK_EQ(counts[i], targetCounts[i]);
+        CHECK_EQ(xs[i], targetXs[i]);
+    }
+}
+
 
 void test_checkRatios()
 {
@@ -276,7 +296,8 @@ bool runTests()
     bool passed = true;
     RUN_TEST(test_bgr2gray);
     RUN_TEST(test_gray2bin);
-    RUN_TEST(test_countPixels);
+    RUN_TEST(test_countPixels_1);
+    RUN_TEST(test_countPixels_2);
     RUN_TEST(test_checkRatios);
     RUN_TEST(test_computeCenters_simple_1);
     RUN_TEST(test_computeCenters_simple_2);
