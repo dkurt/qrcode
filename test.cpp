@@ -278,7 +278,7 @@ void test_decode()
 #ifdef WIN32
     cv::Mat img = cv::imread("..\\qrcode.png");
 #else
-    cv::Mat img = cv::imread("/home/deathboydmi/Documents/refresh_cpp/qrcode/qrcode.png");
+    cv::Mat img = cv::imread("../qrcode.png");
 #endif
     cv::Mat gray, bin, mask;
 
