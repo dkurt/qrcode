@@ -4,6 +4,8 @@
 
 #include <opencv2/opencv.hpp>
 #include <quirc.h>
+#include <algorithm>
+#include <numeric>
 
 const char* keys =
     "{ help  h | | Print help message. }"
@@ -85,35 +87,87 @@ int main(int argc, char** argv)
 
 void bgr2gray(const cv::Mat& src, cv::Mat& dst)
 {
-    CV_Error(cv::Error::StsNotImplemented, "BGR to grayscale conversion. See cv::cvtColor");
+    cv::cvtColor(src, dst, CV_BGR2GRAY);
 }
 
 void gray2bin(const cv::Mat& src, cv::Mat& dst, uint8_t thresh)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Grayscale to black-and-white conversion. See cv::threshold");
+    cv::threshold(src, dst, thresh, 255, CV_THRESH_BINARY);
 }
 
 void countPixels(const uint8_t* row, int length, std::vector<int>& counts,
-                 std::vector<int>& xs)
-{
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels counting");
+                 std::vector<int>& xs) {
+    int cur_val = 0;
+    auto cur = row;
+    auto first = row;
+    auto last = row + length;
+    for(;;) {
+        cur = std::find(cur, last, cur_val);
+        if (cur==last) break;
+        xs.push_back(static_cast<int>(cur - first));
+        cur_val ^= 255;
+    }
+    for(auto i = 1; i<xs.size(); i++) {
+        counts.push_back(xs[i] - xs[i-1]);
+    }
+    if(xs.size()) counts.push_back(length - *xs.rbegin());
 }
-
 bool checkRatios(const int* counts)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Black-and-white pixels ratios check");
-    return false;
+    static constexpr double eps = 1.5;
+    auto el = {counts[0], counts[1], counts[3], counts[4]};
+    double min = *std::min_element(el.begin(), el.end());
+    double max = *std::max_element(el.begin(), el.end());
+    double mean = static_cast<double>(std::accumulate(el.begin(), el.end(), 0)) / 4;
+    double mid = counts[2];
+    double a = mid / mean;
+    if ( a > 3 * eps || a < 3 / eps) return false;
+    return max / min <= eps;
 }
 
-void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers)
-{
-    CV_Error(cv::Error::StsNotImplemented, "Markers centers estimation");
+void computeCenters(const std::vector<cv::Rect>& rects, std::vector<cv::Point>& centers) {
+    std::vector<char> used(rects.size(), false);
+    std::vector<cv::Rect> intersections;
+
+    for (int i = 0; i < rects.size(); i++) {
+        if (used[i]) continue;
+        used[i] = true;
+        intersections.push_back(rects[i]);
+        for (int j = i+1; j < rects.size(); j++) {
+            if (used[j]) continue;
+            if ((*intersections.rbegin() & rects[j]).area()) {
+                *intersections.rbegin() &= rects[j];
+                used[j] = true;
+            }
+        }
+    }
+
+    for (const auto &i : intersections) {
+        centers.push_back(cv::Point(i.x + i.width/2, i.y + i.height/2));
+    }
 }
 
 void sortMarkers(const std::vector<cv::Point>& centers, cv::Point& topLeft,
                  cv::Point& topRight, cv::Point& bottomLeft)
 {
-    CV_Error(cv::Error::StsNotImplemented, "Markers positioning");
+    std::vector<cv::Point> vectors = {centers[1] - centers[2], centers[0] - centers[2], centers[1] - centers[0]};
+    auto copyCenters(centers);
+    topLeft = centers[std::distance(vectors.begin(), std::max_element(vectors.begin(), vectors.end(),
+                                                              [](cv::Point &a, cv::Point &b) {
+                                                                return a.dot(a) < b.dot(b);
+                                                              }))];
+
+    copyCenters.erase(std::remove_if(copyCenters.begin(), copyCenters.end(), [&topLeft](cv::Point &center){
+      return center == topLeft;
+    }));
+
+    if((copyCenters[0] - topLeft).cross(copyCenters[1] - topLeft) < 0) {
+        bottomLeft = copyCenters[0];
+        topRight = copyCenters[1];
+    } else {
+        bottomLeft = copyCenters[1];
+        topRight = copyCenters[0];
+    }
 }
 
 std::string decode(const cv::Mat& bin, cv::Mat& img, cv::Mat& mask)
